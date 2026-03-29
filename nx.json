@@ -38,7 +38,14 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["apps/forex-marketplace-e2e/**/*"]
+      "exclude": [
+        "apps/forex-marketplace-e2e/**/*",
+        "apps-e2e/**/*",
+        "user-service-e2e/**/*",
+        "wallet-service-e2e/**/*",
+        "rate-service-e2e/**/*",
+        "transaction-service-e2e/**/*"
+      ]
     }
   ]
 }

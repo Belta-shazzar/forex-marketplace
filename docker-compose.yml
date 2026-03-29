@@ -1,0 +1,109 @@
+# Docker Compose for Forex Marketplace
+
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: forex-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: forex
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - forex-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: user-service
+    container_name: forex-user-service
+    ports:
+      - "3001:3001"
+    environment:
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/forex-user-db
+      JWT_SECRET: your-secret-key-change-in-production
+      PORT: 3001
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - forex-network
+
+  wallet-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: wallet-service
+    container_name: forex-wallet-service
+    ports:
+      - "3002:3002"
+    environment:
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/forex-wallet-db
+      RATE_SERVICE_URL: http://rate-service:5001
+      PORT: 3002
+    depends_on:
+      - mongodb
+      - rate-service
+    networks:
+      - forex-network
+
+  rate-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: rate-service
+    container_name: forex-rate-service
+    ports:
+      - "3003:3003"
+      - "5001:5001"
+    environment:
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/forex-rate-db
+      PORT: 3003
+      GRPC_PORT: 5001
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - forex-network
+
+  transaction-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: transaction-service
+    container_name: forex-transaction-service
+    ports:
+      - "3004:3004"
+    environment:
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/forex-transaction-db
+      WALLET_SERVICE_URL: http://wallet-service:3002/api
+      RATE_SERVICE_URL: http://rate-service:3003/api
+      PORT: 3004
+    depends_on:
+      - mongodb
+      - wallet-service
+      - rate-service
+    networks:
+      - forex-network
+
+volumes:
+  mongo-data:
+
+networks:
+  forex-network:
+    driver: bridge

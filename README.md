@@ -1,101 +1,258 @@
-# ForexMarketplace
+# 🏦 Forex Marketplace Backend System
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A production-ready microservices-based Forex Marketplace backend built with **NestJS**, **TypeORM**, **MongoDB**, and **gRPC**. This project demonstrates clean architecture, scalability, and best practices for building distributed systems.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## 📋 Table of Contents
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/nest?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+- [Project Overview](#project-overview)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [Services](#services)
+- [API Documentation](#api-documentation)
+- [Development](#development)
+- [Deployment](#deployment)
 
-## Run tasks
+## 🎯 Project Overview
 
-To run the dev server for your app, use:
+The Forex Marketplace Backend System enables users to:
 
-```sh
-npx nx serve forex-marketplace
+- **Register and Authenticate** - User registration with JWT-based authentication
+- **Manage Wallets** - Multi-currency wallet support with balance management
+- **Trade Currencies** - Buy and sell forex with real-time exchange rates
+- **View Transaction History** - Complete audit trail of all transactions
+- **Real-time Rates** - Exchange rate data fetched from external providers
+
+## 🏗️ Architecture
+
+This project follows a **Microservices Architecture** pattern within an **Nx Monorepo**:
+
+```
+forex-marketplace/
+├── apps/
+│   ├── user-service/          # User authentication & management
+│   ├── wallet-service/        # Multi-currency wallet management
+│   ├── rate-service/          # Exchange rate service (gRPC provider)
+│   └── transaction-service/   # Order processing & transaction history
+├── libs/
+│   ├── common/                # Shared components
+│   ├── config/                # Configuration utilities
+│   ├── logger/                # Logging service
+│   └── errors/                # Custom error classes
+├── docker-compose.yml         # Multi-container orchestration
+└── Dockerfile                 # Multi-stage build
 ```
 
-To create a production bundle:
+## 🛠 Tech Stack
 
-```sh
-npx nx build forex-marketplace
+| Component | Technology |
+|-----------|-----------|
+| **Runtime** | Node.js 20+ |
+| **Framework** | NestJS 10+ |
+| **Language** | TypeScript |
+| **Database** | MongoDB |
+| **ORM** | TypeORM |
+| **Authentication** | JWT + Passport |
+| **Password Security** | bcrypt |
+| **Monorepo** | Nx 18+ |
+| **Testing** | Jest |
+| **API Protocol** | REST + gRPC |
+| **Containerization** | Docker |
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 20+ and npm 11+
+- Docker & Docker Compose
+- Git
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Copy environment file
+cp .env.example .env.development
+
+# Start with Docker Compose
+docker-compose up -d
+
+# Services will be available at:
+# User Service: http://localhost:3001/api
+# Wallet Service: http://localhost:3002/api
+# Rate Service: http://localhost:3003/api
+# Transaction Service: http://localhost:3004/api
 ```
 
-To see all available targets to run for a project, run:
+### Manual Local Setup
 
-```sh
-npx nx show project forex-marketplace
+```bash
+# Terminal 1: User Service
+npm run start user-service
+
+# Terminal 2: Wallet Service  
+npm run start wallet-service
+
+# Terminal 3: Rate Service
+npm run start rate-service
+
+# Terminal 4: Transaction Service
+npm run start transaction-service
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+## 📦 Services
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### User Service (Port 3001)
 
-## Add new projects
+Handles authentication and user management.
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+**Endpoints:**
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - User login
+- `GET /api/users/profile` - Get user profile (JWT required)
+- `PUT /api/users/profile` - Update user profile (JWT required)
 
-Use the plugin's generator to create new projects.
+### Wallet Service (Port 3002)
 
-To generate a new application, use:
+Manages multi-currency wallets.
 
-```sh
-npx nx g @nx/nest:app demo
+**Endpoints:**
+- `POST /api/wallets` - Create wallet
+- `GET /api/wallets/:userId` - Get wallet
+- `GET /api/wallets/:userId/balance/:currency` - Check balance
+- `POST /api/wallets/:userId/credit` - Credit wallet
+- `POST /api/wallets/:userId/debit` - Debit wallet
+
+### Rate Service (Port 3003, gRPC on 5001)
+
+Provides exchange rates with caching.
+
+**Endpoints:**
+- `GET /api/rates/:from/:to` - Get single rate
+- `GET /api/rates/:from?to=USD,EUR` - Get multiple rates
+- `GET /api/rates/:from` - Get all rates for currency
+
+### Transaction Service (Port 3004)
+
+Orchestrates trading orders and transaction history.
+
+**Endpoints:**
+- `POST /api/orders` - Place forex order
+- `GET /api/orders/:orderId` - Get order details
+- `GET /api/orders/user/:userId` - Get user orders
+- `GET /api/transactions/:userId` - Get transaction history
+
+## 💻 Development
+
+### Running Tests
+
+```bash
+npm test                    # Run all tests
+npm test user-service       # Run specific service tests
+npm run test:cov            # Run with coverage
 ```
 
-To generate a new library, use:
+### Building
 
-```sh
-npx nx g @nx/node:lib mylib
+```bash
+npm run build               # Build all services
+npm run build user-service  # Build specific service
+npm run start:prod user-service  # Run production build
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+### Code Quality
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
+```bash
+npm run lint                # Run linter
+npm run format              # Format code with Prettier
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+## 🐳 Docker Deployment
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```bash
+# Start all services
+docker-compose up -d
 
-### Step 2
+# View logs
+docker-compose logs -f
 
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
+# Stop services
+docker-compose down
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 📚 Example API Usage
 
-## Install Nx Console
+### Register User
+```bash
+curl -X POST http://localhost:3001/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "username": "john_doe",
+    "password": "SecurePass123"
+  }'
+```
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+### Get Exchange Rate
+```bash
+curl http://localhost:3003/api/rates/USD/EUR
+```
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Place Trading Order
+```bash
+curl -X POST http://localhost:3004/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "user-id",
+    "type": "BUY",
+    "fromCurrency": "USD",
+    "toCurrency": "EUR",
+    "amount": 100
+  }'
+```
 
-## Useful links
+## 🔐 Security
 
-Learn more:
+- JWT token-based authentication
+- Bcrypt password hashing
+- Input validation with DTO
+- Secure error handling
+- CORS enabled
+- Environment variable management
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/nest?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 📈 Scalability
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- Nx monorepo for efficient builds
+- Independent service scaling
+- MongoDB horizontal scaling support
+- gRPC for efficient inter-service communication
+- Docker container deployment
+- Kubernetes-ready architecture
+
+## 📝 Additional Documentation
+
+- [User Service README](./apps/user-service/README.md)
+- [Wallet Service README](./apps/wallet-service/README.md)
+- [Rate Service README](./apps/rate-service/README.md)
+- [Transaction Service README](./apps/transaction-service/README.md)
+- [Architecture Decisions](./ARCHITECTURE.md)
+
+## 🎯 Next Steps
+
+To get started:
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables: `cp .env.example .env.development`
+4. Start services with Docker Compose: `docker-compose up -d`
+5. Explore the APIs at `http://localhost:3001/api` (and other ports)
+
+## 📞 Support
+
+For issues, questions, or contributions, please open an issue or create a pull request.
+
+---
+
+**Version:** 1.0.0 | **Updated:** March 2025

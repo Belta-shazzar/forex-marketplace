@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package rate;
+
+service RateService {
+  rpc GetRate(GetRateRequest) returns (GetRateResponse);
+  rpc GetRates(GetRatesRequest) returns (GetRatesResponse);
+  rpc SubscribeRates(Empty) returns (stream RateUpdate);
+}
+
+message GetRateRequest {
+  string from_currency = 1;
+  string to_currency = 2;
+}
+
+message GetRateResponse {
+  string from_currency = 1;
+  string to_currency = 2;
+  double rate = 3;
+  int64 timestamp = 4;
+}
+
+message GetRatesRequest {
+  string from_currency = 1;
+  repeated string to_currencies = 2;
+}
+
+message GetRatesResponse {
+  string from_currency = 1;
+  repeated RateData rates = 2;
+  int64 timestamp = 3;
+}
+
+message RateData {
+  string to_currency = 1;
+  double rate = 2;
+}
+
+message RateUpdate {
+  string from_currency = 1;
+  string to_currency = 2;
+  double rate = 3;
+  int64 timestamp = 4;
+}
+
+message Empty {}
